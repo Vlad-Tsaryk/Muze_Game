@@ -1,3 +1,4 @@
+import json
 import sys
 
 class Game:
@@ -60,17 +61,28 @@ class Game:
 
             print(''.join(map(str, muze[i])))
 
-    def save(self):
-        pass
+    def save(self,y,x):
+        with open('save.json','w',encoding='utf-8') as file:
+            json.dump([y,x],file)
+        print('Игра успешно сохранена')
+        sys.exit()
+
     def load_save(self):
-        pass
+        with open('save.json',encoding='utf-8') as file:
+            f = json.load(file)
+            print(f[0],f[1])
+            self.set_start(f[0],f[1])
+            return Ball(f[0], f[1])
+
+
 
 
 class Ball():
     def __init__(self, y, x):
         self.__x = x
         self.__y = y
-        self.__g = 1
+        self.__old_x = x
+        self.__old_y = y
 
     @property
     def x(self):
@@ -96,11 +108,10 @@ class Ball():
 
     def move_x(self, x,muze):
         if muze[self.__y][x] !='***':
-            # if muze[self.__y][self.__x] == muze[self.__y][x]:
-            #     print('Шарик струсил и убежал')
-            #     sys.exit()
-
             muze[self.__y][self.__x] = '   '
+            self.check_coward(self.y,x)
+            self.__old_x = self.__x
+            self.__old_y = self.__y
             self.__x = x
         else:
             print('Шарик ударился о стену')
@@ -109,27 +120,76 @@ class Ball():
 
     def move_y(self, y,muze):
         if muze[y][self.__x] !='***':
-            # if muze[self.__y][self.__x] == muze[y][self.__x]:
-            #     print('Шарик струсил и убежал')
-            #     sys.exit()
             muze[self.__y][self.__x] = '   '
+            self.check_coward(y, self.x)
+            self.__old_y = self.__y
+            self.__old_x = self.__x
             self.__y = y
         else:
             print('Шарик ударился о стену')
             sys.exit()
 
+    def check_coward(self,y,x):
+        if [self.__old_y,self.__old_x] == [y ,x]:
+            print('Шарик струсил и убежал')
+            sys.exit()
 
 
-player = Ball(1, 0)
+
+won_title = '''           __.                                              
+        .-".'                      .--.            _..._    
+      .' .'                     .'    \       .-""  __ ""-. 
+     /  /                     .'       : --..:__.-""  ""-. \/
+    :  :                     /         ;.d$$    sbp_.-""-:_:
+    ;  :                    : ._       :P .-.   ,"TP        
+    :   \                    \  T--...-; : d$b  :d$b        
+     \   `.                   \  `..'    ; $ $  ;$ $        
+      `.   "-.                 ).        : T$P  :T$P        
+        \..---^..             /           `-'    `._`._     
+       .'        "-.       .-"                     T$$$b    
+      /             "-._.-"               ._        '^' ;   
+     :                                    \.`.         /    
+     ;                                -.   \`."-._.-'-'     
+    :                                 .'\   \ \ \ \          I won yohooo
+    ;  ;                             /:  \   \ \ . ;        
+   :   :                            ,  ;  `.  `.;  :        
+   ;    \        ;                     ;    "-._:  ;        
+  :      `.      :                     :         \/         
+  ;       /"-.    ;                    :                    
+ :       /    "-. :                  : ;                    
+ :     .'        T-;                 ; ;        
+ ;    :          ; ;                /  :        
+ ;    ;          : :              .'    ;       
+:    :            ;:         _..-"\     :       
+:     \           : ;       /      \     ;      
+;    . '.         '-;      /        ;    :      
+;  \  ; :           :     :         :    '-.      
+'.._L.:-'           :     ;          ;    . `. 
+                     ;    :          :  \  ; :  
+                     :    '-..       '.._L.:-'  
+                      ;     , `.                
+                      :   \  ; :                
+                      '..__L.:-'''
 game = Game()
 game.creat_muze()
-game.set_start(player.y, player.x)
+a = input('Загрузить последнее сохранение? y(Да) n(Нет)')
+if a == 'y':
+    player = game.load_save()
+
+
+
+else:
+    player = Ball(1, 0)
+    game.set_start(player.y, player.x)
+
 game.set_finish(20, 24)
 game.print_muze(game.muze)
 
 while True:
     side = input()
-    if side == 'w' and not game.find_wall(player.y - 1, player.x):
+    if side == 'save':
+        game.save(player.y,player.x)
+    elif side == 'w' and not game.find_wall(player.y - 1, player.x):
         player.move_y(player.y - 1,game.muze)
     elif side == 's' and not game.find_wall(player.y + 1, player.x):
         player.move_y(player.y + 1,game.muze)
@@ -137,6 +197,11 @@ while True:
         player.move_x(player.x + 1,game.muze)
     elif side == 'a' and  not game.find_wall(player.y, player.x - 1):
         player.move_x(player.x - 1,game.muze)
+
+    if [player.y,player.x] == game.finish:
+        print(won_title)
+        sys.exit()
+
     game.muze[player.y][player.x] = '●ᴥ●'
     for i in range(len(game.muze)): print(''.join(map(str, game.muze[i])))
     print('Шарик нашел правильный путь')

@@ -1,4 +1,5 @@
 import json
+import os
 import sys
 
 
@@ -24,6 +25,11 @@ class Game:
         except ValueError:
             return False
         print("Шарик заблудился")
+        a = input('Хотите сохранить прогресс? y(Да) n(Нет)')
+        if a == 'y':
+            Game.save(self, self.__y, self.__x)
+        else:
+            Game.delete_save(self)
         sys.exit()
 
     def creat_muze(self):
@@ -75,6 +81,9 @@ class Game:
             print('Сохранение успешно загружено')
             return self.set_start(f[0], f[1])
 
+    def delete_save(self):
+        with open('save.json', 'wb'):
+            pass
 
 class Ball():
     def __init__(self, y, x):
@@ -114,6 +123,11 @@ class Ball():
             self.__x = x
         else:
             print('Шарик ударился о стену')
+            a = input('Хотите сохранить прогресс? y(Да) n(Нет)')
+            if a == 'y':
+                Game.save(self,self.__y, self.__x)
+            else:
+                Game.delete_save(self)
             sys.exit()
 
     def move_y(self, y, muze):
@@ -127,12 +141,19 @@ class Ball():
             print('Шарик ударился о стену')
             a = input('Хотите сохранить прогресс? y(Да) n(Нет)')
             if a == 'y':
-                pass
+                Game.save(self,self.__y, self.__x)
+            else:
+                Game.delete_save(self)
             sys.exit()
 
     def check_coward(self, y, x):
         if [self.__old_y, self.__old_x] == [y, x]:
             print('Шарик струсил и убежал')
+            a = input('Хотите сохранить прогресс? y(Да) n(Нет)')
+            if a == 'y':
+                Game.save(self, self.__y, self.__x)
+            else:
+                Game.delete_save(self)
             sys.exit()
 
 
@@ -172,7 +193,6 @@ won_title = '''           __.
                       '..__L.:-'''
 game = Game()
 game.creat_muze()
-player = game.set_start(1, 0)
 a = input('Загрузить последнее сохранение? y(Да) n(Нет)')
 if a == 'y':
     try:
@@ -180,6 +200,9 @@ if a == 'y':
     except:
         print("Сохранений не найдено")
         player = game.set_start(1, 0)
+else:
+    game.delete_save()
+    player = game.set_start(1, 0)
 
 game.set_finish(20, 24)
 game.print_muze(game.muze)
@@ -200,6 +223,7 @@ while True:
     if [player.y, player.x] == game.finish:
         print(won_title)
         sys.exit()
+    os.system('cls')
     game.muze[player.y][player.x] = '●ᴥ●'
     for i in range(len(game.muze)): print(''.join(map(str, game.muze[i])))
     print('Шарик нашел правильный путь')
